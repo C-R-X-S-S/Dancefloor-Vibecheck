@@ -1420,9 +1420,9 @@ function drawGameplay() {
         imageMode(CENTER);
         let swipeTextWidth = 120; // Adjust size as needed
         let swipeTextHeight = (swipeUpTextImg.height / swipeUpTextImg.width) * swipeTextWidth;
-        // Position at bottom left, underneath the DJ booth
+        // Position at bottom left, underneath the DJ booth but a bit higher
         let swipeX = width * 0.25; // Left of DJ (who is at center)
-        let swipeY = height * 0.95; // Below DJ booth area
+        let swipeY = height * 0.92; // Below DJ booth area but higher than before
         image(swipeUpTextImg, swipeX, swipeY, swipeTextWidth, swipeTextHeight);
       }
       
@@ -4119,10 +4119,10 @@ function createScoreForm() {
     // Center the form horizontally and position it below the score, before leaderboard
     // Use overlay-relative positioning to match drawGameOverOverlay()
     let boxWidth = isMobile ? width * 0.9 : width * 0.6;
-    let boxHeight = isMobile ? height * 0.85 : height * 0.7;
+    let boxHeight = isMobile ? height * 0.95 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
-    let boxY = (height - boxHeight) / 2;
-    let formY = boxY + boxHeight * 0.42; // Position between score (0.35) and leaderboard (0.62)
+    let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
+    let formY = boxY + boxHeight * 0.42; // Position between score (0.35) and leaderboard (0.75)
     
     submitScoreForm.style('position', 'absolute');
     submitScoreForm.style('left', '50%');
@@ -4296,9 +4296,9 @@ function updateFormPosition() {
   if (!submitScoreForm) return;
   
   let boxWidth = isMobile ? width * 0.9 : width * 0.6;
-  let boxHeight = isMobile ? height * 0.85 : height * 0.7;
-  let boxY = (height - boxHeight) / 2;
-  let formY = boxY + boxHeight * 0.42; // Position between score (0.35) and leaderboard (0.62)
+  let boxHeight = isMobile ? height * 0.95 : height * 0.7;
+  let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
+  let formY = boxY + boxHeight * 0.42; // Position between score (0.35) and leaderboard (0.75)
   
   submitScoreForm.style('top', formY + 'px');
   submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
@@ -4922,11 +4922,11 @@ function drawGameOverOverlay() {
   fill(0, 0, 0, 180);
   rect(0, 0, width, height);
   
-  // Main overlay box - larger on mobile
+  // Main overlay box - larger on mobile, full height if needed
   let boxWidth = isMobile ? width * 0.9 : width * 0.6;
-  let boxHeight = isMobile ? height * 0.85 : height * 0.7;
+  let boxHeight = isMobile ? height * 0.95 : height * 0.7; // Almost full height on mobile
   let boxX = (width - boxWidth) / 2;
-  let boxY = (height - boxHeight) / 2;
+  let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2; // Start near top on mobile
   
   fill(30, 30, 30, 240);
   stroke(255, 215, 0);
@@ -4954,17 +4954,17 @@ function drawGameOverOverlay() {
   
   // Form positioned at boxY + boxHeight * 0.45
   
-  // Leaderboard (always show if data exists)
+  // Leaderboard (always show if data exists) - moved down to avoid overlap with form
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.07 : boxWidth * 0.035);
-    text("Highest Scores", width/2, boxY + boxHeight * 0.62); // Moved down to give form more space
+    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.75 : 0.62)); // Much lower on mobile
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      let yPos = boxY + boxHeight * 0.67 + (i * boxHeight * 0.04);
+      let yPos = boxY + boxHeight * (isMobile ? 0.80 : 0.67) + (i * boxHeight * 0.04);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
@@ -4988,9 +4988,9 @@ function drawGameOverOverlay() {
   
   // Buttons - moved down to bottom
   fill(255, 165, 0);
-  let baseBtnWidth = boxWidth * 0.15;
-  let baseBtnHeight = boxHeight * 0.08;
-  let btnY = boxY + boxHeight * 0.88; // Moved further down
+  let baseBtnWidth = isMobile ? boxWidth * 0.25 : boxWidth * 0.15; // Wider buttons on mobile
+  let baseBtnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08; // Slightly shorter on mobile to fit
+  let btnY = boxY + boxHeight * (isMobile ? 0.95 : 0.88); // Moved to very bottom on mobile
   
   // Play Again button with pulsing animation
   let pulseScale = 1 + sin(frameCount * 0.1) * 0.05; // Same pulse as Start Game button
@@ -5005,11 +5005,11 @@ function drawGameOverOverlay() {
   textAlign(CENTER, CENTER);
   
   // Play Again text with pulsing size
-  textSize((isMobile ? boxWidth * 0.05 : boxWidth * 0.025) * pulseScale);
+  textSize((isMobile ? boxWidth * 0.04 : boxWidth * 0.025) * pulseScale);
   text("Play Again", boxX + boxWidth * 0.3, btnY + baseBtnHeight/2);
   
   // Main Menu text (normal size)
-  textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
+  textSize(isMobile ? boxWidth * 0.04 : boxWidth * 0.025);
   text("Main Menu", boxX + boxWidth * 0.7, btnY + baseBtnHeight/2);
 }
 
