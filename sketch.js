@@ -681,7 +681,7 @@ function preload() {
     () => console.error("Failed to load red aura dancer image")
   );
   
-  vibecheckTaglineImg = loadImage('Visual/vibecheck&tagline.png',
+  vibecheckTaglineImg = loadImage('Visual/vibecheck&Tagline.png',
     () => console.log("Vibecheck tagline image loaded successfully!"),
     () => console.error("Failed to load vibecheck tagline image")
   );
