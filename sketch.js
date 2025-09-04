@@ -762,13 +762,30 @@ function preload() {
   
   // dc10LogoImg loading removed
   
-  // Load video assets
+  // Load video assets with error handling
   try {
+    // Check if video files exist before loading
+    console.log('🎥 Attempting to load party started video...');
+    
     // Try multiple video formats for better browser compatibility (prioritize .mp4)
-    // Add cache buster to force fresh load
     const cacheBuster = '?v=' + Date.now();
     partyStartedVideo = createVideo(['Visual/score15_party_started.mp4' + cacheBuster, 'Visual/score15_party_started.mov' + cacheBuster]);
-    partyStartedVideo.hide(); // Hide video element initially
+    
+    if (partyStartedVideo) {
+      partyStartedVideo.hide(); // Hide video element initially
+      
+      // Add error event listener to handle loading errors
+      partyStartedVideo.elt.addEventListener('error', (e) => {
+        console.error('❌ Video loading error:', e);
+        console.error('❌ Video error details:', partyStartedVideo.elt.error);
+        partyStartedVideo = null; // Disable video functionality
+      });
+      
+      // Add load event listener to confirm successful loading
+      partyStartedVideo.elt.addEventListener('loadeddata', () => {
+        console.log('✅ Video loaded successfully');
+      });
+    }
     
     // Ensure video has audio attributes set properly
     partyStartedVideo.elt.preload = 'auto';
@@ -1512,9 +1529,8 @@ function playPartyStartedVideo() {
   console.log('Video object:', partyStartedVideo);
   console.log('Video object exists:', !!partyStartedVideo);
   
-  // Function confirmed to be called - removing test alert
-  
-  if (partyStartedVideo) {
+  // Check if video exists and is properly loaded
+  if (partyStartedVideo && partyStartedVideo.elt && !partyStartedVideo.elt.error) {
     console.log('✅ Video object exists, attempting to play...');
     console.log('🔍 Video element details:', partyStartedVideo.elt);
     console.log('🔍 Video src:', partyStartedVideo.elt.src);
@@ -1600,10 +1616,17 @@ function playPartyStartedVideo() {
       console.log('▶️ Game resumed after video');
     });
   } else {
-    console.log('❌ Party started video not available - video file not found!');
+    console.log('❌ Party started video not available or failed to load!');
+    if (partyStartedVideo && partyStartedVideo.elt && partyStartedVideo.elt.error) {
+      console.log('❌ Video error:', partyStartedVideo.elt.error);
+    }
     console.log('🔍 Please ensure score15_party_started.mp4 is in the Visual folder');
-    // Fallback: enable lights immediately
-    enableDiscoBallLights();
+    // Fallback: enable lights immediately without crashing
+    try {
+      enableDiscoBallLights();
+    } catch (error) {
+      console.error('❌ Error enabling disco ball lights:', error);
+    }
   }
 }
 
@@ -3079,8 +3102,13 @@ function startGame() {
   // Play start game sound effect and wait for it to finish
   if (startGameSound && startGameSound.isLoaded()) {
     console.log('🔊 Playing start game sound...');
-    startGameSound.play();
-    waitingForStartSound = true;
+    if (!soundEffectsMuted) {
+      startGameSound.play();
+      waitingForStartSound = true;
+    } else {
+      console.log('🔇 Start game sound muted, skipping to actuallyStartGame()');
+      actuallyStartGame();
+    }
     
     // Set up callback for when sound finishes
     startGameSound.onended(() => {
@@ -3100,6 +3128,13 @@ function actuallyStartGame() {
   waitingForStartSound = false;
   gameState = 'playing';
   autopilotMode = false;
+  
+  // Show SoundCloud widget when gameplay starts
+  let soundcloudPlayer = document.getElementById('soundcloud-player');
+  if (soundcloudPlayer) {
+    soundcloudPlayer.style.display = 'block';
+    console.log('🎵 SoundCloud widget displayed');
+  }
   
   // Track game start
   trackGameEvent('game_started', {
