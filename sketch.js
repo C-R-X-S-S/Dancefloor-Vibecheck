@@ -786,6 +786,11 @@ function preload() {
   
   // Load sound files
   try {
+    // Enable audio context on user interaction
+    if (getAudioContext().state !== 'running') {
+      console.log("Audio context not running, will start on user interaction");
+    }
+    
     throwSound = loadSound('Sound Effects/throw record.mp3');
     recordHitSound = loadSound('Sound Effects/record hits goer.mp3');
     smokeSound = loadSound('Sound Effects/Smoke Effect.mp3');
@@ -3077,6 +3082,14 @@ function startGame() {
   console.log('🎮 startGame() called');
   console.log('🔊 startGameSound loaded:', startGameSound && startGameSound.isLoaded());
   
+  // Activate audio context on user interaction
+  if (getAudioContext().state !== 'running') {
+    console.log('🔊 Activating audio context...');
+    getAudioContext().resume().then(() => {
+      console.log('🔊 Audio context activated!');
+    });
+  }
+  
   // Play start game sound effect and wait for it to finish
   if (startGameSound && startGameSound.isLoaded()) {
     console.log('🔊 Playing start game sound...');
@@ -4122,7 +4135,7 @@ function createScoreForm() {
     let boxHeight = isMobile ? height * 0.95 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
     let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-    let formY = boxY + boxHeight * 0.42; // Position between score (0.35) and leaderboard (0.75)
+    let formY = boxY + boxHeight * (isMobile ? 0.50 : 0.42); // Lower on mobile to avoid overlap
     
     submitScoreForm.style('position', 'absolute');
     submitScoreForm.style('left', '50%');
@@ -4298,7 +4311,7 @@ function updateFormPosition() {
   let boxWidth = isMobile ? width * 0.9 : width * 0.6;
   let boxHeight = isMobile ? height * 0.95 : height * 0.7;
   let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-  let formY = boxY + boxHeight * 0.42; // Position between score (0.35) and leaderboard (0.75)
+  let formY = boxY + boxHeight * (isMobile ? 0.50 : 0.42); // Lower on mobile to avoid overlap
   
   submitScoreForm.style('top', formY + 'px');
   submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
@@ -4958,13 +4971,13 @@ function drawGameOverOverlay() {
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.07 : boxWidth * 0.035);
-    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.75 : 0.62)); // Much lower on mobile
+    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.80 : 0.62)); // Much lower on mobile
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      let yPos = boxY + boxHeight * (isMobile ? 0.80 : 0.67) + (i * boxHeight * 0.04);
+      let yPos = boxY + boxHeight * (isMobile ? 0.85 : 0.67) + (i * boxHeight * 0.04);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
