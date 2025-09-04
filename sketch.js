@@ -696,12 +696,12 @@ function preload() {
     () => console.error("Failed to load disco ball image")
   );
   
-  discoBallSmirkLeftImg = loadImage('Visual/disco_ball_smirk_left.png',
+  discoBallSmirkLeftImg = loadImage('Visual/disco_ball_smirk_Left.png',
     () => console.log("Disco ball left smirk image loaded successfully!"),
     () => console.error("Failed to load disco ball left smirk image")
   );
   
-  discoBallSmirkRightImg = loadImage('Visual/disco_ball_smirk_right.png',
+  discoBallSmirkRightImg = loadImage('Visual/disco_ball_smirk_Right.png',
     () => console.log("Disco ball right smirk image loaded successfully!"),
     () => console.error("Failed to load disco ball right smirk image")
   );
