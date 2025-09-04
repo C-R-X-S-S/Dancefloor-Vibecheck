@@ -633,6 +633,7 @@ let discoBallChangedAt8 = false;
 let girlReachedDJBooth = false;
 let mmmGettingDownPlayed = false;
 let showSwipeUpText = true; // Show swipe up text until first score
+let soundEffectsMuted = false; // Global flag for muting sound effects
 
 // Swipe detection variables for mobile
 let swipeStartX = 0;
@@ -654,6 +655,19 @@ let wristbandDisplayTimer = 0;
 let zoomedWristband = null; // New global variable
 
 function preload() {
+  // Load sound files first
+  throwSound = loadSound('Sound Effects/throw record.mp3');
+  recordHitSound = loadSound('Sound Effects/record hits goer.mp3');
+  smokeSound = loadSound('Sound Effects/Smoke Effect.mp3');
+  startGameSound = loadSound('Sound Effects/Start Game_Lets_Party.mp3');
+  score5Sound = loadSound('Sound Effects/score5_rockin_lights_flashin.mp3');
+  score10Sound = loadSound('Sound Effects/score10_whoohoo_gimmee_smoke.mp3');
+  gameOverSound = loadSound('Sound Effects/Game Over_song.mp3');
+  playerLeavesFloorSound = loadSound('Sound Effects/player_leaves_floor.mp3');
+  heySomebodyDroppedSound = loadSound('Sound Effects/mmm_getting_down.mp3');
+  throwWristbandSound = loadSound('Sound Effects/throw_wristband.mp3');
+  ooohThankYouSound = loadSound('Sound Effects/oooh_thank_you.mp3');
+  
   // Load visual assets
   partyEmojiImg = loadImage('Visual/party_emoji.png', 
     () => console.log("Party emoji loaded successfully!"),
@@ -784,36 +798,8 @@ function preload() {
     partyStartedVideo = null;
   }
   
-  // Load sound files
-  try {
-    // Enable audio context on user interaction
-    if (getAudioContext().state !== 'running') {
-      console.log("Audio context not running, will start on user interaction");
-    }
-    
-    throwSound = loadSound('Sound Effects/throw record.mp3');
-    recordHitSound = loadSound('Sound Effects/record hits goer.mp3');
-    smokeSound = loadSound('Sound Effects/Smoke Effect.mp3');
-    startGameSound = loadSound('Sound Effects/Start Game_Lets_Party.mp3');
-    score5Sound = loadSound('Sound Effects/score5_rockin_lights_flashin.mp3');
-    score10Sound = loadSound('Sound Effects/score10_whoohoo_gimmee_smoke.mp3');
-    gameOverSound = loadSound('Sound Effects/Game Over_song.mp3');
-    playerLeavesFloorSound = loadSound('Sound Effects/player_leaves_floor.mp3');
-    heySomebodyDroppedSound = loadSound('Sound Effects/mmm_getting_down.mp3');
-    // girl_I_got_it sound removed from gameplay
-    throwWristbandSound = loadSound('Sound Effects/throw_wristband.mp3',
-      () => console.log("Throw wristband sound loaded!"),
-      () => console.error("Failed to load throw wristband sound")
-    );
-    ooohThankYouSound = loadSound('Sound Effects/oooh_thank_you.mp3',
-      () => console.log("Oooh thank you sound loaded!"),
-      () => console.error("Failed to load oooh thank you sound")
-    );
-
-  } catch (error) {
-    console.error("Error loading sound files:", error);
-    // Game will continue without problematic sounds
-  }
+  // Sound files are now loaded in preload() function
+  console.log("🔊 Sound files loaded in preload function");
 }
 
 function setup() {
@@ -1091,7 +1077,7 @@ function drawGameplay() {
     discoBallChangedAt8 = true;
     // Play the "mmm getting down" sound
     if (heySomebodyDroppedSound && heySomebodyDroppedSound.isLoaded()) {
-      heySomebodyDroppedSound.play();
+      if (!soundEffectsMuted) heySomebodyDroppedSound.play();
       mmmGettingDownPlayed = true; // Mark that the sound has been played
     }
     
@@ -1129,7 +1115,7 @@ function drawGameplay() {
     if (throwWristbandSound && throwWristbandSound.isLoaded()) {
       console.log("🎵 Playing throw wristband sound!");
       throwWristbandSound.setVolume(1.0);
-      throwWristbandSound.play();
+      if (!soundEffectsMuted) throwWristbandSound.play();
     } else {
       console.error("❌ Could not play throw wristband sound");
     }
@@ -1310,7 +1296,7 @@ function drawGameplay() {
             if (dancers[j].state === 'leaving' || dancers[j].state === 'stopping') {
               // Play hit sequence (only if no milestone sounds are playing)
               if (recordHitSound && recordHitSound.isLoaded() && !isMilestoneSoundPlaying()) {
-                recordHitSound.play();
+                if (!soundEffectsMuted) recordHitSound.play();
               }
               
               // Bring them back to dancing!
@@ -2663,7 +2649,7 @@ function createEmojiFromSwipe(startX, startY, targetX, targetY) {
   let dirY = dy / distance;
   
   // Set speed (similar to existing record creation)
-  let speed = 8;
+  let speed = 15; // Increased to match desktop throwing speed
   let vx = dirX * speed;
   let vy = dirY * speed;
   
@@ -2965,7 +2951,7 @@ function handleInput(inputX, inputY) {
     let angle = atan2(inputY - djY, inputX - djX);
     
     // Calculate velocity components from angle
-    let speed = 10; // Emoji throw speed (increased by 25% from 8)
+    let speed = 15; // Emoji throw speed (increased to reach top of screen)
     let vx = speed * cos(angle);
     let vy = speed * sin(angle);
     
@@ -4971,13 +4957,13 @@ function drawGameOverOverlay() {
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.07 : boxWidth * 0.035);
-    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.80 : 0.62)); // Much lower on mobile
+    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.82 : 0.62)); // Even lower on mobile
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      let yPos = boxY + boxHeight * (isMobile ? 0.85 : 0.67) + (i * boxHeight * 0.04);
+      let yPos = boxY + boxHeight * (isMobile ? 0.87 : 0.67) + (i * boxHeight * 0.04);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
