@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reecords Vibecheck</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+    <!-- Add p5.sound script AFTER p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    <!-- Load Supabase with a specific version and make it globally available -->
+    <script>
+        // Create a global variable to hold the Supabase client
+        let supabaseClient = null;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #leaderboard-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            display: none;
+        }
+        #leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        #leaderboard-table th, #leaderboard-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        #leaderboard-table th {
+            background-color: #333;
+            color: #fff;
+        }
+        #leaderboard-table tr:nth-child(even) {
+            background-color: #252525;
+        }
+        .score-form {
+            margin-top: 15px;
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            z-index: 1000;
+        }
+        .score-form input {
+            padding: 8px;
+            margin-right: 10px;
+            background-color: #333;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        .score-form button, .view-leaderboard-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .score-form button:hover, .view-leaderboard-btn:hover {
+            background-color: #45a049;
+        }
+        .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="leaderboard-container" style="display: none;">
+        <button class="close-btn" onclick="hideLeaderboard()">×</button>
+        <h2>Reecords Vibecheck Leaderboard</h2>
+        <table id="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Score</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <!-- Leaderboard entries will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- SoundCloud Player Widget with Track Info Overlay -->
+    <div id="soundcloud-player" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; width: 250px;">
+        <!-- Track Info Text Overlay -->
+        <div id="track-info" style="
+            color: white; 
+            font-size: 11px; 
+            font-family: Arial, sans-serif; 
+            margin-bottom: 2px; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.3);
+            padding: 2px 4px;
+            border-radius: 2px;
+            line-height: 1.2;
+        ">
+            <div>Track ID:</div>
+            <div id="current-track-name">Reelow - Hey Suga (feat. Rayzir, Eli Wild)</div>
+        </div>
+        <!-- SoundCloud Player -->
+        <iframe id="soundcloud-iframe" width="100%" height="20" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/1793446501&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&enable_api=true"></iframe>
+    </div>
+    
+    <!-- Load sketch.js at the end of the body -->
+    <script src="sketch.js"></script>
+</body>
+</html>
