@@ -4181,7 +4181,7 @@ function createScoreForm() {
     let boxHeight = isMobile ? height * 0.95 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
     let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-    let formY = boxY + boxHeight * (isMobile ? 0.40 : 0.42); // Closer to score on mobile
+    let formY = boxY + boxHeight * (isMobile ? 0.33 : 0.42); // Much closer to score on mobile
     
     submitScoreForm.style('position', 'absolute');
     submitScoreForm.style('left', '50%');
@@ -4189,11 +4189,12 @@ function createScoreForm() {
     submitScoreForm.style('top', formY + 'px');
     submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
     submitScoreForm.style('text-align', 'center');
-    submitScoreForm.style('z-index', '1001');
+    submitScoreForm.style('z-index', '10001');
     submitScoreForm.style('display', 'none');
     submitScoreForm.style('background-color', 'transparent');
     submitScoreForm.style('padding', '20px');
     submitScoreForm.style('border', 'none');
+    submitScoreForm.style('pointer-events', 'all');
     
     // Create a container for the form layout (vertical on mobile, horizontal on desktop)
     let formContainer = createDiv('');
@@ -4357,7 +4358,7 @@ function updateFormPosition() {
   let boxWidth = isMobile ? width * 0.9 : width * 0.6;
   let boxHeight = isMobile ? height * 0.95 : height * 0.7;
   let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-  let formY = boxY + boxHeight * (isMobile ? 0.40 : 0.42); // Closer to score on mobile
+  let formY = boxY + boxHeight * (isMobile ? 0.33 : 0.42); // Much closer to score on mobile
   
   submitScoreForm.style('top', formY + 'px');
   submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
@@ -5009,21 +5010,21 @@ function drawGameOverOverlay() {
   // Score - moved closer to game over image
   fill(255, 215, 0);
   textSize(isMobile ? boxWidth * 0.08 : boxWidth * 0.04);
-  text("Score: " + score, width/2, boxY + boxHeight * (isMobile ? 0.30 : 0.35));
+  text("Score: " + score, width/2, boxY + boxHeight * (isMobile ? 0.28 : 0.35));
   
-  // Form positioned at boxY + boxHeight * 0.45
+  // Form positioned at boxY + boxHeight * 0.33 (mobile) / 0.42 (desktop)
   
   // Leaderboard (always show if data exists) - moved down to avoid overlap with form
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.07 : boxWidth * 0.035);
-    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.70 : 0.62)); // Much lower on mobile to avoid ALL overlaps
+    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.60 : 0.62)); // Positioned after form on mobile
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      let yPos = boxY + boxHeight * (isMobile ? 0.75 : 0.67) + (i * boxHeight * 0.04);
+      let yPos = boxY + boxHeight * (isMobile ? 0.65 : 0.67) + (i * boxHeight * 0.04);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
@@ -5049,7 +5050,7 @@ function drawGameOverOverlay() {
   fill(255, 165, 0);
   let baseBtnWidth = isMobile ? boxWidth * 0.25 : boxWidth * 0.15; // Wider buttons on mobile
   let baseBtnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08; // Slightly shorter on mobile to fit
-  let btnY = boxY + boxHeight * (isMobile ? 0.90 : 0.88); // Positioned below leaderboard
+  let btnY = boxY + boxHeight * (isMobile ? 0.85 : 0.88); // Positioned below leaderboard
   
   // Play Again button with pulsing animation
   let pulseScale = 1 + sin(frameCount * 0.1) * 0.05; // Same pulse as Start Game button
