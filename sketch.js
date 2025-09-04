@@ -1564,11 +1564,23 @@ function playPartyStartedVideo() {
     console.log('📺 Video set to full-screen mode');
     console.log('⏸️ Game paused for video playback');
     
+    // Add timeout to prevent infinite loading
+    let videoTimeout = setTimeout(() => {
+      console.log('⏰ Video timeout - falling back to disco lights');
+      if (partyStartedVideo) {
+        partyStartedVideo.hide();
+      }
+      videoPlaying = false;
+      waitingForScore15Video = false;
+      enableDiscoBallLights();
+    }, 5000); // 5 second timeout
+    
     // Try to play and catch any errors
     try {
       const playPromise = partyStartedVideo.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
+          clearTimeout(videoTimeout); // Cancel timeout if video starts successfully
           console.log('✅ Video play() succeeded');
           console.log('🔊 Audio enabled:', !partyStartedVideo.elt.muted);
           console.log('🔊 Current volume:', partyStartedVideo.elt.volume);
@@ -1583,16 +1595,28 @@ function playPartyStartedVideo() {
           }, 100);
           
         }).catch((error) => {
+          clearTimeout(videoTimeout); // Cancel timeout if we get an error
           console.error('❌ Video play() failed:', error);
           console.error('Error name:', error.name);
           console.error('Error message:', error.message);
           // If video fails, continue with game
+          videoPlaying = false;
+          waitingForScore15Video = false;
+          if (partyStartedVideo) {
+            partyStartedVideo.hide();
+          }
           enableDiscoBallLights();
         });
       }
     } catch (error) {
+      clearTimeout(videoTimeout); // Cancel timeout if we get an error
       console.error('❌ Video play() threw error:', error);
       // If video fails, continue with game
+      videoPlaying = false;
+      waitingForScore15Video = false;
+      if (partyStartedVideo) {
+        partyStartedVideo.hide();
+      }
       enableDiscoBallLights();
     }
     
@@ -1600,6 +1624,7 @@ function playPartyStartedVideo() {
     
     // Set up callback for when video finishes
     partyStartedVideo.onended(() => {
+      clearTimeout(videoTimeout); // Cancel timeout if video finishes normally
       console.log('🎥 Video finished, hiding and resuming game');
       videoPlaying = false;
       waitingForScore15Video = false;
@@ -4156,7 +4181,7 @@ function createScoreForm() {
     let boxHeight = isMobile ? height * 0.95 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
     let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-    let formY = boxY + boxHeight * (isMobile ? 0.50 : 0.42); // Lower on mobile to avoid overlap
+    let formY = boxY + boxHeight * (isMobile ? 0.40 : 0.42); // Closer to score on mobile
     
     submitScoreForm.style('position', 'absolute');
     submitScoreForm.style('left', '50%');
@@ -4332,7 +4357,7 @@ function updateFormPosition() {
   let boxWidth = isMobile ? width * 0.9 : width * 0.6;
   let boxHeight = isMobile ? height * 0.95 : height * 0.7;
   let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-  let formY = boxY + boxHeight * (isMobile ? 0.50 : 0.42); // Lower on mobile to avoid overlap
+  let formY = boxY + boxHeight * (isMobile ? 0.40 : 0.42); // Closer to score on mobile
   
   submitScoreForm.style('top', formY + 'px');
   submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
@@ -4981,10 +5006,10 @@ function drawGameOverOverlay() {
     text("GAME OVER", width/2, boxY + boxHeight * 0.2);
   }
   
-  // Score
+  // Score - moved closer to game over image
   fill(255, 215, 0);
   textSize(isMobile ? boxWidth * 0.08 : boxWidth * 0.04);
-  text("Score: " + score, width/2, boxY + boxHeight * 0.35);
+  text("Score: " + score, width/2, boxY + boxHeight * (isMobile ? 0.30 : 0.35));
   
   // Form positioned at boxY + boxHeight * 0.45
   
@@ -4992,13 +5017,13 @@ function drawGameOverOverlay() {
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.07 : boxWidth * 0.035);
-    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.82 : 0.62)); // Even lower on mobile
+    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.70 : 0.62)); // Much lower on mobile to avoid ALL overlaps
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      let yPos = boxY + boxHeight * (isMobile ? 0.87 : 0.67) + (i * boxHeight * 0.04);
+      let yPos = boxY + boxHeight * (isMobile ? 0.75 : 0.67) + (i * boxHeight * 0.04);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
@@ -5024,7 +5049,7 @@ function drawGameOverOverlay() {
   fill(255, 165, 0);
   let baseBtnWidth = isMobile ? boxWidth * 0.25 : boxWidth * 0.15; // Wider buttons on mobile
   let baseBtnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08; // Slightly shorter on mobile to fit
-  let btnY = boxY + boxHeight * (isMobile ? 0.95 : 0.88); // Moved to very bottom on mobile
+  let btnY = boxY + boxHeight * (isMobile ? 0.90 : 0.88); // Positioned below leaderboard
   
   // Play Again button with pulsing animation
   let pulseScale = 1 + sin(frameCount * 0.1) * 0.05; // Same pulse as Start Game button
