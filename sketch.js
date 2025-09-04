@@ -143,7 +143,7 @@ function initializePlayerTracking() {
     playerID = generatePlayerID();
     localStorage.setItem('reecords_player_id', playerID);
     isFirstTimePlayer = true;
-    console.log('�� New player created:', playerID);
+    console.log('   New player created:', playerID);
   } else {
     console.log('👋 Returning player:', playerID);
   }
@@ -189,7 +189,7 @@ function startNewSession() {
     is_first_time: isFirstTimePlayer
   });
   
-  console.log('�� Session started:', sessionID);
+  console.log('   Session started:', sessionID);
 }
 
 // End current session
@@ -423,7 +423,7 @@ function stopEngagementHeartbeat() {
 // Retry sending pending events
 function retryPendingEvents() {
   if (pendingEvents.length > 0 && supabaseClient) {
-    console.log('�� Retrying', pendingEvents.length, 'pending events...');
+    console.log('   Retrying', pendingEvents.length, 'pending events...');
     pendingEvents.forEach(event => {
       sendEventToSupabase(event);
     });
@@ -619,8 +619,7 @@ let discoBallImg, discoBallSmirkLeftImg, discoBallSmirkRightImg, discoBall5ocloc
 let swipeUpTextImg;
 let oneDancerLeftImg, secondDancerImg, thirdDancerImg;
 // sugaBagImg removed - no longer used
-let solidGroovesLogoImg;
-let dc10LogoImg;
+// solidGroovesLogoImg and dc10LogoImg removed
 let partyStartedVideo;
 let autopilotMode = false; // For background gameplay during game over
 
@@ -745,15 +744,9 @@ function preload() {
     () => console.error("Failed to load swipe up text image")
   );
   
-  solidGroovesLogoImg = loadImage('Visual/solid_grooves.png',
-    () => console.log("Solid grooves logo loaded successfully!"),
-    () => console.error("Failed to load solid grooves logo image")
-  );
+  // solidGroovesLogoImg and dc10LogoImg loading removed
   
-  dc10LogoImg = loadImage('Visual/dc10_logo.png',
-    () => console.log("DC-10 logo loaded successfully!"),
-    () => console.error("Failed to load DC-10 logo image")
-  );
+  // dc10LogoImg loading removed
   
   // Load video assets
   try {
@@ -1420,30 +1413,16 @@ function drawGameplay() {
       text("Score: " + score, 20, 30);
       text("Dancers Left: " + dancersLeft + "/3", 20, 55);
       
-      // Draw solid grooves logo underneath dancers left counter
-      if (solidGroovesLogoImg) {
-        imageMode(CENTER);
-        let logoWidth = isMobile ? 105 : 140;
-        let logoHeight = (solidGroovesLogoImg.height / solidGroovesLogoImg.width) * logoWidth;
-        image(solidGroovesLogoImg, 20 + logoWidth/2, 85 + logoHeight/2, logoWidth, logoHeight);
-      }
-      
-      // Draw DC-10 logo at top center
-      if (dc10LogoImg) {
-        imageMode(CENTER);
-        let dc10Width = isMobile ? 150 : 180;
-        let dc10Height = (dc10LogoImg.height / dc10LogoImg.width) * dc10Width;
-        image(dc10LogoImg, width/2, 50, dc10Width, dc10Height);
-      }
+      // solidGroovesLogoImg and dc10LogoImg drawing removed
       
       // Draw swipe up text for mobile/touch devices only before first score
       if (isMobile && showSwipeUpText && swipeUpTextImg && swipeUpTextImg.width > 0) {
         imageMode(CENTER);
         let swipeTextWidth = 120; // Adjust size as needed
         let swipeTextHeight = (swipeUpTextImg.height / swipeUpTextImg.width) * swipeTextWidth;
-        // Position at bottom left, left of the DJ
+        // Position at bottom left, underneath the DJ booth
         let swipeX = width * 0.25; // Left of DJ (who is at center)
-        let swipeY = height * 0.85; // Bottom area, same level as DJ
+        let swipeY = height * 0.95; // Below DJ booth area
         image(swipeUpTextImg, swipeX, swipeY, swipeTextWidth, swipeTextHeight);
       }
       
@@ -2064,20 +2043,12 @@ function triggerDiscoBallEffect() {
   discoBallActive = true;
   discoBallY = -100; // Start above screen
   
-  // Calculate DC-10 logo position and size to position disco ball below it
-  let dc10Width = isMobile ? 150 : 180;
-  let dc10Height = (dc10LogoImg ? dc10LogoImg.height / dc10LogoImg.width : 1) * dc10Width;
-  let dc10BottomY = 50 + dc10Height/2; // DC-10 logo is centered at y=50
-  
-  // Calculate disco ball size to position it correctly
+  // Position disco ball at top of screen (no longer positioned below DC-10 logo)
   let discoBallSize = isMobile ? 60 : 80; // Approximate disco ball size
-  discoBallTargetY = dc10BottomY + discoBallSize/2; // Position center so top of disco ball is at bottom of logo
+  discoBallTargetY = 80; // Fixed position near top of screen
   
   // Debug disco ball positioning
   console.log('🪩 Disco ball positioning calculation:', {
-    dc10Width,
-    dc10Height,
-    dc10BottomY,
     discoBallSize,
     discoBallTargetY,
     isMobile
@@ -4147,8 +4118,8 @@ function createScoreForm() {
     
     // Center the form horizontally and position it below the score, before leaderboard
     // Use overlay-relative positioning to match drawGameOverOverlay()
-    let boxWidth = width * 0.6;
-    let boxHeight = height * 0.7;
+    let boxWidth = isMobile ? width * 0.9 : width * 0.6;
+    let boxHeight = isMobile ? height * 0.85 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
     let boxY = (height - boxHeight) / 2;
     let formY = boxY + boxHeight * 0.42; // Position between score (0.35) and leaderboard (0.62)
@@ -4157,7 +4128,7 @@ function createScoreForm() {
     submitScoreForm.style('left', '50%');
     submitScoreForm.style('transform', 'translateX(-50%)');
     submitScoreForm.style('top', formY + 'px');
-    submitScoreForm.style('width', (width * 0.5) + 'px');
+    submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
     submitScoreForm.style('text-align', 'center');
     submitScoreForm.style('z-index', '1001');
     submitScoreForm.style('display', 'none');
@@ -4165,20 +4136,21 @@ function createScoreForm() {
     submitScoreForm.style('padding', '20px');
     submitScoreForm.style('border', 'none');
     
-    // Create a container for the horizontal form layout
+    // Create a container for the form layout (vertical on mobile, horizontal on desktop)
     let formContainer = createDiv('');
     formContainer.parent(submitScoreForm);
     formContainer.style('display', 'flex');
-    formContainer.style('gap', '10px');
-    formContainer.style('align-items', 'flex-start'); // Align all elements to their top edges
+    formContainer.style('flex-direction', isMobile ? 'column' : 'row');
+    formContainer.style('gap', isMobile ? '15px' : '10px');
+    formContainer.style('align-items', isMobile ? 'center' : 'flex-start'); // Center on mobile, top align on desktop
     formContainer.style('justify-content', 'center');
     formContainer.style('margin-bottom', '15px');
     
     let nameInput = createInput('').attribute('placeholder', 'Your Name');
     nameInput.parent(formContainer);
-    nameInput.style('width', '150px');
-    nameInput.style('padding', '10px');
-    nameInput.style('font-size', '14px');
+    nameInput.style('width', isMobile ? '280px' : '150px');
+    nameInput.style('padding', isMobile ? '15px' : '10px');
+    nameInput.style('font-size', isMobile ? '18px' : '14px');
     nameInput.style('background-color', '#2a2a2a');
     nameInput.style('border', '2px solid #FFD700');
     nameInput.style('border-radius', '6px');
@@ -4191,9 +4163,9 @@ function createScoreForm() {
     
     let emailInput = createInput('').attribute('placeholder', 'Email Address');
     emailInput.parent(formContainer);
-    emailInput.style('width', '150px');
-    emailInput.style('padding', '10px');
-    emailInput.style('font-size', '14px');
+    emailInput.style('width', isMobile ? '280px' : '150px');
+    emailInput.style('padding', isMobile ? '15px' : '10px');
+    emailInput.style('font-size', isMobile ? '18px' : '14px');
     emailInput.style('background-color', '#2a2a2a');
     emailInput.style('border', '2px solid #FFD700');
     emailInput.style('border-radius', '6px');
@@ -4206,8 +4178,8 @@ function createScoreForm() {
     
     let submitButton = createButton('Save Score');
     submitButton.parent(formContainer);
-    submitButton.style('padding', '10px 15px');
-    submitButton.style('font-size', '14px');
+    submitButton.style('padding', isMobile ? '15px 25px' : '10px 15px');
+    submitButton.style('font-size', isMobile ? '18px' : '14px');
     submitButton.style('background-color', '#1E90FF'); // Darker blue color
     submitButton.style('border', '2px solid transparent');
     submitButton.style('border-radius', '6px');
@@ -4323,13 +4295,13 @@ async function submitScore() {
 function updateFormPosition() {
   if (!submitScoreForm) return;
   
-  let boxWidth = width * 0.6;
-  let boxHeight = height * 0.7;
+  let boxWidth = isMobile ? width * 0.9 : width * 0.6;
+  let boxHeight = isMobile ? height * 0.85 : height * 0.7;
   let boxY = (height - boxHeight) / 2;
   let formY = boxY + boxHeight * 0.42; // Position between score (0.35) and leaderboard (0.62)
   
   submitScoreForm.style('top', formY + 'px');
-  submitScoreForm.style('width', (width * 0.5) + 'px');
+  submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
 }
 
 // Function to store score locally when database is unavailable
@@ -4950,9 +4922,9 @@ function drawGameOverOverlay() {
   fill(0, 0, 0, 180);
   rect(0, 0, width, height);
   
-  // Main overlay box
-  let boxWidth = width * 0.6;
-  let boxHeight = height * 0.7;
+  // Main overlay box - larger on mobile
+  let boxWidth = isMobile ? width * 0.9 : width * 0.6;
+  let boxHeight = isMobile ? height * 0.85 : height * 0.7;
   let boxX = (width - boxWidth) / 2;
   let boxY = (height - boxHeight) / 2;
   
@@ -4970,14 +4942,14 @@ function drawGameOverOverlay() {
     image(gameOverImg, width/2, boxY + boxHeight * 0.2, imgWidth, imgHeight);
   } else {
     fill(255, 215, 0);
-    textSize(boxWidth * 0.08);
+    textSize(isMobile ? boxWidth * 0.12 : boxWidth * 0.08);
     textAlign(CENTER, CENTER);
     text("GAME OVER", width/2, boxY + boxHeight * 0.2);
   }
   
   // Score
   fill(255, 215, 0);
-  textSize(boxWidth * 0.04);
+  textSize(isMobile ? boxWidth * 0.08 : boxWidth * 0.04);
   text("Score: " + score, width/2, boxY + boxHeight * 0.35);
   
   // Form positioned at boxY + boxHeight * 0.45
@@ -4985,7 +4957,7 @@ function drawGameOverOverlay() {
   // Leaderboard (always show if data exists)
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
-    textSize(boxWidth * 0.035);
+    textSize(isMobile ? boxWidth * 0.07 : boxWidth * 0.035);
     text("Highest Scores", width/2, boxY + boxHeight * 0.62); // Moved down to give form more space
     
     // Show top 3 scores to save space
@@ -4995,7 +4967,7 @@ function drawGameOverOverlay() {
       let yPos = boxY + boxHeight * 0.67 + (i * boxHeight * 0.04);
       
       fill(255, 255, 255);
-      textSize(boxWidth * 0.025);
+      textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
       textAlign(LEFT, CENTER);
       
       // Rank
@@ -5033,11 +5005,11 @@ function drawGameOverOverlay() {
   textAlign(CENTER, CENTER);
   
   // Play Again text with pulsing size
-  textSize(boxWidth * 0.025 * pulseScale);
+  textSize((isMobile ? boxWidth * 0.05 : boxWidth * 0.025) * pulseScale);
   text("Play Again", boxX + boxWidth * 0.3, btnY + baseBtnHeight/2);
   
   // Main Menu text (normal size)
-  textSize(boxWidth * 0.025);
+  textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
   text("Main Menu", boxX + boxWidth * 0.7, btnY + baseBtnHeight/2);
 }
 
