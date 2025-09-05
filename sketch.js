@@ -532,7 +532,7 @@ let strobeCooldown = 0; // Cooldown between strobe bursts
 let strobeEnabled = false; // Whether strobe is enabled (after 5th hit)
 let waitingForScore5Sound = false; // Flag to track if we're waiting for score 5 sound to finish
 let waitingForScore10Sound = false; // Flag to track if we're waiting for score 10 sound to finish
-let waitingForScore15Video = false; // Flag to track if we're waiting for score 15 video to finish
+let waitingForDiscoBallVideo = false; // Flag to track if we're waiting for disco ball video to finish
 let isMobile = false; // Flag for mobile detection
 let smokeActive = false; // Flag to track if smoke machine is active
 let smokeTimer = 0; // Timer for smoke duration
@@ -767,9 +767,8 @@ function preload() {
     // Check if video files exist before loading
     console.log('🎥 Attempting to load party started video...');
     
-    // Try multiple video formats for better browser compatibility (prioritize .mp4)
-    const cacheBuster = '?v=' + Date.now();
-    partyStartedVideo = createVideo(['Visual/score15_party_started.mp4' + cacheBuster, 'Visual/score15_party_started.mov' + cacheBuster]);
+    // Load video without cache buster to avoid loading issues
+    partyStartedVideo = createVideo(['Visual/discoball_party_started.mp4']);
     
     if (partyStartedVideo) {
       partyStartedVideo.hide(); // Hide video element initially
@@ -810,6 +809,9 @@ function preload() {
     console.log("Video element:", partyStartedVideo);
     console.log("Video element type:", typeof partyStartedVideo);
     console.log("Video DOM element:", partyStartedVideo ? partyStartedVideo.elt : 'NO ELEMENT');
+    
+    // Add manual test trigger for debugging
+    console.log("🎬 To test video manually, type: testVideo() in console");
   } catch (error) {
     console.error("❌ Error creating party started video:", error);
     partyStartedVideo = null;
@@ -995,7 +997,7 @@ function drawGameplay() {
       gameState: gameState,
       autopilotMode: autopilotMode,
       videoPlaying: videoPlaying,
-      waitingForScore15Video: waitingForScore15Video,
+      waitingForDiscoBallVideo: waitingForDiscoBallVideo,
       dancersCount: dancers.length,
       recordsCount: records.length
     });
@@ -1099,13 +1101,24 @@ function drawGameplay() {
     }
   }
   
-  // Check for disco ball video at score 15
-  if (score >= 15 && !waitingForScore15Video) {
-    console.log('🎥 Score 15 reached - triggering disco ball video!');
+  // Check for disco ball video at score 8
+  if (score >= 8 && !waitingForDiscoBallVideo) {
+    console.log('🎥 Score 8 reached - triggering disco ball video!');
     console.log('🎥 Video object exists:', !!partyStartedVideo);
     console.log('🎥 Current score:', score);
-    console.log('🎥 waitingForScore15Video was:', waitingForScore15Video);
-    waitingForScore15Video = true;
+    console.log('🎥 waitingForDiscoBallVideo was:', waitingForDiscoBallVideo);
+    
+    // Double-check video state before triggering
+    if (partyStartedVideo && partyStartedVideo.elt) {
+      console.log('🎥 Video element state:', {
+        src: partyStartedVideo.elt.src,
+        readyState: partyStartedVideo.elt.readyState,
+        networkState: partyStartedVideo.elt.networkState,
+        error: partyStartedVideo.elt.error
+      });
+    }
+    
+    waitingForDiscoBallVideo = true;
     playPartyStartedVideo();
     
     // Find a female dancer to give white aura and position her at bottom right of dancefloor
@@ -1539,16 +1552,24 @@ function playPartyStartedVideo() {
   console.log('Video object:', partyStartedVideo);
   console.log('Video object exists:', !!partyStartedVideo);
   
-  // Check if video exists and is properly loaded
+  // Enhanced video debugging and validation
+  console.log('🔍 Video validation check:');
+  console.log('  - partyStartedVideo exists:', !!partyStartedVideo);
+  console.log('  - partyStartedVideo.elt exists:', !!(partyStartedVideo && partyStartedVideo.elt));
+  console.log('  - Video has error:', !!(partyStartedVideo && partyStartedVideo.elt && partyStartedVideo.elt.error));
+  
   if (partyStartedVideo && partyStartedVideo.elt && !partyStartedVideo.elt.error) {
     console.log('✅ Video object exists, attempting to play...');
     console.log('🔍 Video element details:', partyStartedVideo.elt);
     console.log('🔍 Video src:', partyStartedVideo.elt.src);
     console.log('🔍 Video readyState:', partyStartedVideo.elt.readyState);
+    console.log('🔍 Video networkState:', partyStartedVideo.elt.networkState);
     console.log('🔍 Video error:', partyStartedVideo.elt.error);
+    console.log('🔍 Video duration:', partyStartedVideo.elt.duration);
+    console.log('🔍 Video paused:', partyStartedVideo.elt.paused);
     
     videoPlaying = true;
-    waitingForScore15Video = true;
+    waitingForDiscoBallVideo = true;
     
     // Dim background music by 30%
     dimBackgroundMusic();
@@ -1574,14 +1595,44 @@ function playPartyStartedVideo() {
     console.log('📺 Video set to full-screen mode');
     console.log('⏸️ Game paused for video playback');
     
+    // Check if video is actually loaded before playing
+    if (partyStartedVideo.elt.readyState < 2) {
+      console.log('⚠️ Video not ready yet, readyState:', partyStartedVideo.elt.readyState);
+      console.log('⚠️ Waiting for video to load...');
+      
+      // Wait for video to load
+      partyStartedVideo.elt.addEventListener('canplay', () => {
+        console.log('✅ Video can now play, attempting playback...');
+        attemptVideoPlay();
+      });
+      
+      // Still set a timeout as backup
+      setTimeout(() => {
+        console.log('⏰ Video loading timeout - falling back to disco lights');
+        if (partyStartedVideo) {
+          partyStartedVideo.hide();
+        }
+        videoPlaying = false;
+        waitingForDiscoBallVideo = false;
+        enableDiscoBallLights();
+      }, 10000); // 10 second timeout for loading
+      
+      return; // Exit early, let the event listener handle playback
+    }
+    
+    // Video is ready, play immediately
+    attemptVideoPlay();
+  }
+  
+  function attemptVideoPlay() {
     // Add timeout to prevent infinite loading
     let videoTimeout = setTimeout(() => {
-      console.log('⏰ Video timeout - falling back to disco lights');
+      console.log('⏰ Video playback timeout - falling back to disco lights');
       if (partyStartedVideo) {
         partyStartedVideo.hide();
       }
       videoPlaying = false;
-      waitingForScore15Video = false;
+      waitingForDiscoBallVideo = false;
       enableDiscoBallLights();
     }, 5000); // 5 second timeout
     
@@ -1611,7 +1662,7 @@ function playPartyStartedVideo() {
           console.error('Error message:', error.message);
           // If video fails, continue with game
           videoPlaying = false;
-          waitingForScore15Video = false;
+          waitingForDiscoBallVideo = false;
           if (partyStartedVideo) {
             partyStartedVideo.hide();
           }
@@ -1623,7 +1674,7 @@ function playPartyStartedVideo() {
       console.error('❌ Video play() threw error:', error);
       // If video fails, continue with game
       videoPlaying = false;
-      waitingForScore15Video = false;
+      waitingForDiscoBallVideo = false;
       if (partyStartedVideo) {
         partyStartedVideo.hide();
       }
@@ -1637,7 +1688,7 @@ function playPartyStartedVideo() {
       clearTimeout(videoTimeout); // Cancel timeout if video finishes normally
       console.log('🎥 Video finished, hiding and resuming game');
       videoPlaying = false;
-      waitingForScore15Video = false;
+      waitingForDiscoBallVideo = false;
       
       // Hide video
       partyStartedVideo.hide();
@@ -1653,10 +1704,16 @@ function playPartyStartedVideo() {
   } else {
     console.log('❌ Party started video not available or failed to load!');
     if (partyStartedVideo && partyStartedVideo.elt && partyStartedVideo.elt.error) {
-      console.log('❌ Video error:', partyStartedVideo.elt.error);
+      console.log('❌ Video error code:', partyStartedVideo.elt.error.code);
+      console.log('❌ Video error message:', partyStartedVideo.elt.error.message);
     }
-    console.log('🔍 Please ensure score15_party_started.mp4 is in the Visual folder');
-    // Fallback: enable lights immediately without crashing
+    console.log('🔍 Please ensure discoball_party_started.mp4 is in the Visual folder');
+    console.log('🔍 Video file should be accessible at: Visual/discoball_party_started.mp4');
+    
+    // Immediate fallback: enable lights without video
+    console.log('🚨 SKIPPING VIDEO - Enabling disco lights immediately');
+    videoPlaying = false;
+    waitingForDiscoBallVideo = false;
     try {
       enableDiscoBallLights();
     } catch (error) {
@@ -2023,7 +2080,7 @@ function pauseSoundCloudMusic() {
 
 // Helper function to check if any milestone sounds are currently playing
 function isMilestoneSoundPlaying() {
-  return waitingForScore5Sound || waitingForScore10Sound || waitingForScore15Video;
+  return waitingForScore5Sound || waitingForScore10Sound || waitingForDiscoBallVideo;
 }
 
 // Function to trigger strobe effect
@@ -2476,11 +2533,12 @@ function drawDJBooth() {
 function drawDJ() {
   // DJ seen from behind - responsive positioning
   
-  // Calculate responsive DJ position
+  // Calculate responsive DJ position with better mobile proportions
   let djCenterX = width / 2;
   let djY = height * 0.85;
-  let djBodyWidth = width * 0.08;
-  let djBodyHeight = height * 0.15;
+  // Adjust DJ proportions for mobile vs desktop
+  let djBodyWidth = isMobile ? width * 0.12 : width * 0.08; // Wider on mobile
+  let djBodyHeight = isMobile ? height * 0.12 : height * 0.15; // Shorter on mobile for better proportions
   
   // Calculate bobbing and mixing animations
   let bobAmount = sin(frameCount * 0.1) * 5;
@@ -2495,14 +2553,18 @@ function drawDJ() {
   fill(50, 50, 60); // Dark shirt color
   rect(djCenterX - djBodyWidth/2, djY, djBodyWidth, djBodyHeight); // Body - responsive positioning
   
-  // DJ shoulders
+  // DJ shoulders - adjusted for mobile proportions
   fill(50, 50, 60);
-  rect(djCenterX - djBodyWidth/2 - width * 0.01, djY, width * 0.02, height * 0.05); // Left shoulder
-  rect(djCenterX + djBodyWidth/2 - width * 0.01, djY, width * 0.02, height * 0.05); // Right shoulder
+  let shoulderWidth = isMobile ? width * 0.025 : width * 0.02; // Wider shoulders on mobile
+  let shoulderHeight = isMobile ? height * 0.04 : height * 0.05; // Adjusted height
+  rect(djCenterX - djBodyWidth/2 - shoulderWidth/2, djY, shoulderWidth, shoulderHeight); // Left shoulder
+  rect(djCenterX + djBodyWidth/2 - shoulderWidth/2, djY, shoulderWidth, shoulderHeight); // Right shoulder
   
-  // DJ neck
+  // DJ neck - adjusted for mobile proportions
   fill(150, 120, 90);
-  rect(djCenterX - width * 0.008, djY - height * 0.03 + bobAmount, width * 0.016, height * 0.03 - bobAmount); // Neck
+  let neckWidth = isMobile ? width * 0.012 : width * 0.016; // Wider neck on mobile
+  let neckHeight = isMobile ? height * 0.025 : height * 0.03; // Adjusted height
+  rect(djCenterX - neckWidth/2, djY - neckHeight + bobAmount, neckWidth, neckHeight - bobAmount); // Neck
   
   // Draw DJ's left arm - mixing the left turntable
   push();
@@ -3230,7 +3292,7 @@ function actuallyStartGame() {
   strobeEnabled = false;
   waitingForScore5Sound = false;
   waitingForScore10Sound = false;
-  waitingForScore15Video = false;
+  waitingForDiscoBallVideo = false;
   smokeActive = false;
   smokeTimer = 0;
   lastStrobeCheck = 0;
@@ -3355,7 +3417,7 @@ function restartGame() {
   strobeEnabled = false;
   waitingForScore5Sound = false;
   waitingForScore10Sound = false;
-  waitingForScore15Video = false;
+  waitingForDiscoBallVideo = false;
   smokeActive = false;
   smokeTimer = 0;
   lastStrobeCheck = 0;
@@ -5028,16 +5090,16 @@ function drawMainMenu() {
   let textScale = waitingForStartSound ? 1 : (1 + sin(frameCount * 0.1) * 0.05); // Pulse text only when not waiting
   textSize(min(boxWidth * 0.03, boxHeight * 0.04) * textScale);
   
-  // Black outline for Start Game button text
+  // Black outline for Start Game button text with letter spacing
   stroke(0);
   strokeWeight(3);
   fill(0);
-  text(buttonText, width/2, buttonY + buttonHeight/2);
+  drawTextWithSpacing(buttonText, width/2, buttonY + buttonHeight/2, 3);
   
-  // White text on top for Start Game button
+  // White text on top for Start Game button with letter spacing
   noStroke();
   fill(255);
-  text(buttonText, width/2, buttonY + buttonHeight/2);
+  drawTextWithSpacing(buttonText, width/2, buttonY + buttonHeight/2, 3);
   
   // Credit images below start button - centered with Start Game button
   // Use static button height to prevent pulsing of credit image
@@ -5063,6 +5125,23 @@ function drawMainMenu() {
 
 // SINGLE SOURCE OF TRUTH - NO FAKE RULES
 let GLOBAL_POSITIONS = null;
+
+// Helper function to draw text with letter spacing
+function drawTextWithSpacing(txt, x, y, letterSpacing = 2) {
+  let totalWidth = 0;
+  for (let i = 0; i < txt.length; i++) {
+    totalWidth += textWidth(txt[i]) + letterSpacing;
+  }
+  totalWidth -= letterSpacing; // Remove last spacing
+  
+  let startX = x - totalWidth / 2;
+  let currentX = startX;
+  
+  for (let i = 0; i < txt.length; i++) {
+    text(txt[i], currentX, y);
+    currentX += textWidth(txt[i]) + letterSpacing;
+  }
+}
 
 function calculateRealPositions() {
   if (!isMobile) {
@@ -5122,6 +5201,17 @@ function enforceNoOverlaps() {
   console.log('✅ ENFORCED POSITIONS SET:', GLOBAL_POSITIONS);
   return GLOBAL_POSITIONS;
 }
+
+// Global test function for video debugging
+window.testVideo = function() {
+  console.log('🎬 MANUAL VIDEO TEST TRIGGERED');
+  if (partyStartedVideo) {
+    console.log('✅ Video object exists, testing playback...');
+    playPartyStartedVideo();
+  } else {
+    console.log('❌ No video object found');
+  }
+};
 
 // Function to draw game over overlay
 function drawGameOverOverlay() {
@@ -5231,30 +5321,30 @@ function drawGameOverOverlay() {
   let playAgainSize = (isMobile ? boxWidth * 0.04 : boxWidth * 0.025) * pulseScale;
   textSize(playAgainSize);
   
-  // Black outline for Play Again
+  // Black outline for Play Again with letter spacing
   stroke(0);
   strokeWeight(3);
   fill(0);
-  text("Play Again", boxX + boxWidth * 0.3, btnY + baseBtnHeight/2);
+  drawTextWithSpacing("Play Again", boxX + boxWidth * 0.3, btnY + baseBtnHeight/2, 2);
   
-  // White text on top for Play Again
+  // White text on top for Play Again with letter spacing
   noStroke();
   fill(255);
-  text("Play Again", boxX + boxWidth * 0.3, btnY + baseBtnHeight/2);
+  drawTextWithSpacing("Play Again", boxX + boxWidth * 0.3, btnY + baseBtnHeight/2, 2);
   
   // Main Menu text with black outline (normal size)
   textSize(isMobile ? boxWidth * 0.04 : boxWidth * 0.025);
   
-  // Black outline for Main Menu
+  // Black outline for Main Menu with letter spacing
   stroke(0);
   strokeWeight(3);
   fill(0);
-  text("Main Menu", boxX + boxWidth * 0.7, btnY + baseBtnHeight/2);
+  drawTextWithSpacing("Main Menu", boxX + boxWidth * 0.7, btnY + baseBtnHeight/2, 2);
   
-  // White text on top for Main Menu
+  // White text on top for Main Menu with letter spacing
   noStroke();
   fill(255);
-  text("Main Menu", boxX + boxWidth * 0.7, btnY + baseBtnHeight/2);
+  drawTextWithSpacing("Main Menu", boxX + boxWidth * 0.7, btnY + baseBtnHeight/2, 2);
 }
 
 // Handle window resize to update form positioning
