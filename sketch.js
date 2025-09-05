@@ -1623,8 +1623,11 @@ function playPartyStartedVideo() {
     // Video is ready, play immediately
     attemptVideoPlay();
   }
-  
-  function attemptVideoPlay() {
+}
+
+// Separate function for attempting video playback
+function attemptVideoPlay() {
+  if (partyStartedVideo && partyStartedVideo.elt && !partyStartedVideo.elt.error) {
     // Add timeout to prevent infinite loading
     let videoTimeout = setTimeout(() => {
       console.log('⏰ Video playback timeout - falling back to disco lights');
