@@ -2625,10 +2625,15 @@ function touchStarted() {
     
     console.log("👆 Touch started at:", swipeStartX, swipeStartY);
     return false; // Prevent default behavior
-  } else if (isMobile) {
-    // For menu/game over states, use regular tap handling
+  } else if (isMobile && gameState === 'menu') {
+    // For menu state, use regular tap handling
     handleInput(touches[0].x, touches[0].y);
     return false;
+  } else if (isMobile && gameState === 'gameOver') {
+    // For game over state, allow form interactions but also handle button clicks
+    handleInput(touches[0].x, touches[0].y);
+    // Don't prevent default - allow form inputs to work
+    return true;
   }
 }
 
@@ -4181,7 +4186,7 @@ function createScoreForm() {
     let boxHeight = isMobile ? height * 0.95 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
     let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-    let formY = boxY + boxHeight * (isMobile ? 0.30 : 0.42); // Right after score on mobile
+    let formY = boxY + boxHeight * (isMobile ? 0.35 : 0.42); // Positioned between score and leaderboard
     
     submitScoreForm.style('position', 'absolute');
     submitScoreForm.style('left', '50%');
@@ -4195,6 +4200,7 @@ function createScoreForm() {
     submitScoreForm.style('padding', '20px');
     submitScoreForm.style('border', 'none');
     submitScoreForm.style('pointer-events', 'all');
+    submitScoreForm.style('user-select', 'auto'); // Allow text selection in inputs
     
     console.log('🔧 Form created with styles:', {
       position: 'absolute',
@@ -4224,8 +4230,11 @@ function createScoreForm() {
     nameInput.style('color', 'white');
     nameInput.style('box-sizing', 'border-box');
     nameInput.style('height', '42px'); // Explicit height
+    nameInput.style('pointer-events', 'auto');
+    nameInput.style('user-select', 'text');
     nameInput.input(() => {
       playerName = nameInput.value();
+      console.log('📝 Name input changed:', playerName);
     });
     
     let emailInput = createInput('').attribute('placeholder', 'Email Address');
@@ -4239,8 +4248,11 @@ function createScoreForm() {
     emailInput.style('color', 'white');
     emailInput.style('box-sizing', 'border-box');
     emailInput.style('height', '42px'); // Explicit height
+    emailInput.style('pointer-events', 'auto');
+    emailInput.style('user-select', 'text');
     emailInput.input(() => {
       playerEmail = emailInput.value();
+      console.log('📧 Email input changed:', playerEmail);
     });
     
     let submitButton = createButton('Save Score');
@@ -4255,7 +4267,12 @@ function createScoreForm() {
     submitButton.style('box-sizing', 'border-box');
     submitButton.style('height', '42px'); // Explicit height to match inputs
     submitButton.style('line-height', '1'); // Reset line height to prevent text offset
-    submitButton.mousePressed(submitScore);
+    submitButton.style('pointer-events', 'auto');
+    submitButton.style('user-select', 'none');
+    submitButton.mousePressed(() => {
+      console.log('🔘 Submit button clicked!');
+      submitScore();
+    });
     
     // View Leaderboard button removed - leaderboard shows by default
   } catch (error) {
@@ -4365,7 +4382,7 @@ function updateFormPosition() {
   let boxWidth = isMobile ? width * 0.9 : width * 0.6;
   let boxHeight = isMobile ? height * 0.95 : height * 0.7;
   let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-  let formY = boxY + boxHeight * (isMobile ? 0.30 : 0.42); // Right after score on mobile
+  let formY = boxY + boxHeight * (isMobile ? 0.35 : 0.42); // Positioned between score and leaderboard
   
   submitScoreForm.style('top', formY + 'px');
   submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
@@ -5029,19 +5046,19 @@ function drawGameOverOverlay() {
   textSize(isMobile ? boxWidth * 0.08 : boxWidth * 0.04);
   text("Score: " + score, width/2, boxY + boxHeight * (isMobile ? 0.25 : 0.35));
   
-  // Form positioned at 0.30 on mobile (right after score at 0.25)
+  // Form positioned at 0.35 on mobile (between score at 0.25 and leaderboard at 0.55)
   
   // Leaderboard positioned much lower to avoid overlap
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.06 : boxWidth * 0.035);
-    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.70 : 0.62)); // Much lower on mobile
+    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.55 : 0.62)); // Positioned after form
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      let yPos = boxY + boxHeight * (isMobile ? 0.75 : 0.67) + (i * boxHeight * 0.04);
+      let yPos = boxY + boxHeight * (isMobile ? 0.60 : 0.67) + (i * boxHeight * 0.03);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
@@ -5067,7 +5084,7 @@ function drawGameOverOverlay() {
   fill(255, 165, 0);
   let baseBtnWidth = isMobile ? boxWidth * 0.25 : boxWidth * 0.15; // Wider buttons on mobile
   let baseBtnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08; // Slightly shorter on mobile to fit
-  let btnY = boxY + boxHeight * (isMobile ? 0.92 : 0.88); // At very bottom on mobile
+  let btnY = boxY + boxHeight * (isMobile ? 0.80 : 0.88); // Below leaderboard on mobile
   
   // Play Again button with pulsing animation
   let pulseScale = 1 + sin(frameCount * 0.1) * 0.05; // Same pulse as Start Game button
