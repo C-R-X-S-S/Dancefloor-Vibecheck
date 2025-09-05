@@ -4186,7 +4186,9 @@ function createScoreForm() {
     let boxHeight = isMobile ? height * 0.95 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
     let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-    let formY = boxY + boxHeight * (isMobile ? 0.35 : 0.42); // Positioned between score and leaderboard
+    // Use calculated position for mobile to prevent overlaps
+    let pos = isMobile ? calculateGameOverPositions() : null;
+    let formY = isMobile ? pos.formStart : boxY + boxHeight * 0.42;
     
     submitScoreForm.style('position', 'absolute');
     submitScoreForm.style('left', '50%');
@@ -4385,7 +4387,9 @@ function updateFormPosition() {
   let boxWidth = isMobile ? width * 0.9 : width * 0.6;
   let boxHeight = isMobile ? height * 0.95 : height * 0.7;
   let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
-  let formY = boxY + boxHeight * (isMobile ? 0.35 : 0.42); // Positioned between score and leaderboard
+  // Use calculated position for mobile to prevent overlaps
+  let pos = isMobile ? calculateGameOverPositions() : null;
+  let formY = isMobile ? pos.formStart : boxY + boxHeight * 0.42;
   
   submitScoreForm.style('top', formY + 'px');
   submitScoreForm.style('width', (isMobile ? width * 0.8 : width * 0.5) + 'px');
@@ -5013,11 +5017,51 @@ function drawMainMenu() {
 }
 
 
+// Function to calculate safe positions to prevent overlaps
+function calculateGameOverPositions() {
+  let positions = {};
+  let boxHeight = isMobile ? height * 0.95 : height * 0.7;
+  let boxY = isMobile ? height * 0.025 : (height - boxHeight) / 2;
+  
+  // Fixed positions
+  positions.gameOverImage = boxY + boxHeight * 0.2;
+  positions.score = boxY + boxHeight * 0.25;
+  
+  // Form takes up significant space - calculate dynamically
+  positions.formStart = boxY + boxHeight * 0.30;
+  // Form has 3 elements (name, email, button) with gaps
+  let formElementHeight = boxHeight * 0.04; // Each element height
+  let formGap = boxHeight * 0.02; // Gap between elements
+  let formTotalHeight = (formElementHeight * 3) + (formGap * 2) + boxHeight * 0.02; // Plus padding
+  positions.formEnd = positions.formStart + formTotalHeight;
+  
+  // Ensure leaderboard starts AFTER form with safe gap
+  let safeGap = boxHeight * 0.03; // Minimum gap to prevent overlap
+  positions.leaderboardTitle = positions.formEnd + safeGap;
+  positions.leaderboardEntries = positions.leaderboardTitle + boxHeight * 0.05;
+  
+  // Calculate last leaderboard entry position
+  let leaderboardEntryHeight = boxHeight * 0.03;
+  positions.leaderboardEnd = positions.leaderboardEntries + (leaderboardEntryHeight * 3);
+  
+  // Buttons after leaderboard with gap
+  positions.buttons = positions.leaderboardEnd + safeGap;
+  
+  // Ensure buttons don't go off screen
+  let maxButtonY = boxY + boxHeight * 0.85;
+  positions.buttons = min(positions.buttons, maxButtonY);
+  
+  return positions;
+}
+
 // Function to draw game over overlay
 function drawGameOverOverlay() {
   // Semi-transparent overlay
   fill(0, 0, 0, 180);
   rect(0, 0, width, height);
+  
+  // Calculate safe positions
+  let pos = calculateGameOverPositions();
   
   // Main overlay box - larger on mobile, full height if needed
   let boxWidth = isMobile ? width * 0.9 : width * 0.6;
@@ -5036,32 +5080,32 @@ function drawGameOverOverlay() {
     let imgWidth = boxWidth * 0.4;
     let imgHeight = (gameOverImg.height / gameOverImg.width) * imgWidth;
     imageMode(CENTER);
-    image(gameOverImg, width/2, boxY + boxHeight * 0.2, imgWidth, imgHeight);
+    image(gameOverImg, width/2, pos.gameOverImage, imgWidth, imgHeight);
   } else {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.12 : boxWidth * 0.08);
     textAlign(CENTER, CENTER);
-    text("GAME OVER", width/2, boxY + boxHeight * 0.2);
+    text("GAME OVER", width/2, pos.gameOverImage);
   }
   
-  // Score - positioned right after game over image
+  // Score - using calculated position
   fill(255, 215, 0);
   textSize(isMobile ? boxWidth * 0.08 : boxWidth * 0.04);
-  text("Score: " + score, width/2, boxY + boxHeight * (isMobile ? 0.25 : 0.35));
+  text("Score: " + score, width/2, pos.score);
   
-  // Form positioned at 0.35 on mobile (between score at 0.25 and leaderboard at 0.65)
+  // Form positioned dynamically (calculated in positions)
   
-  // Leaderboard positioned much lower to avoid overlap
+  // Leaderboard using calculated positions to GUARANTEE no overlap
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.06 : boxWidth * 0.035);
-    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.65 : 0.62)); // Much lower to avoid Save button overlap
+    text("Highest Scores", width/2, isMobile ? pos.leaderboardTitle : boxY + boxHeight * 0.62);
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      let yPos = boxY + boxHeight * (isMobile ? 0.70 : 0.67) + (i * boxHeight * 0.03);
+      let yPos = isMobile ? pos.leaderboardEntries + (i * boxHeight * 0.03) : boxY + boxHeight * 0.67 + (i * boxHeight * 0.03);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
@@ -5083,11 +5127,11 @@ function drawGameOverOverlay() {
     }
   }
   
-  // Buttons - moved down to bottom
+  // Buttons - using calculated position to ensure no overlap
   fill(255, 165, 0);
   let baseBtnWidth = isMobile ? boxWidth * 0.25 : boxWidth * 0.15; // Wider buttons on mobile
   let baseBtnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08; // Slightly shorter on mobile to fit
-  let btnY = boxY + boxHeight * (isMobile ? 0.85 : 0.88); // Below leaderboard on mobile
+  let btnY = isMobile ? pos.buttons : boxY + boxHeight * 0.88; // Dynamically positioned on mobile
   
   // Play Again button with pulsing animation
   let pulseScale = 1 + sin(frameCount * 0.1) * 0.05; // Same pulse as Start Game button
