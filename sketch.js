@@ -4197,7 +4197,7 @@ function createScoreForm() {
     submitScoreForm.style('z-index', '10001');
     submitScoreForm.style('display', 'none');
     submitScoreForm.style('background-color', 'transparent');
-    submitScoreForm.style('padding', '20px');
+    submitScoreForm.style('padding', '10px');
     submitScoreForm.style('border', 'none');
     submitScoreForm.style('pointer-events', 'all');
     submitScoreForm.style('user-select', 'auto'); // Allow text selection in inputs
@@ -4214,10 +4214,10 @@ function createScoreForm() {
     formContainer.parent(submitScoreForm);
     formContainer.style('display', 'flex');
     formContainer.style('flex-direction', isMobile ? 'column' : 'row');
-    formContainer.style('gap', isMobile ? '15px' : '10px');
+    formContainer.style('gap', isMobile ? '8px' : '10px');
     formContainer.style('align-items', isMobile ? 'center' : 'flex-start'); // Center on mobile, top align on desktop
     formContainer.style('justify-content', 'center');
-    formContainer.style('margin-bottom', '15px');
+    formContainer.style('margin-bottom', '5px');
     
     let nameInput = createInput('').attribute('placeholder', 'Your Name');
     nameInput.parent(formContainer);
@@ -4342,6 +4342,9 @@ async function submitScore() {
     
     // Show success message for online submission
     showSuccessMessage('Score saved to leaderboard!');
+    
+    // Refresh leaderboard to show new score
+    await fetchLeaderboard();
     
     // Hide the score submission form
     submitScoreForm.style('display', 'none');
@@ -5046,19 +5049,19 @@ function drawGameOverOverlay() {
   textSize(isMobile ? boxWidth * 0.08 : boxWidth * 0.04);
   text("Score: " + score, width/2, boxY + boxHeight * (isMobile ? 0.25 : 0.35));
   
-  // Form positioned at 0.35 on mobile (between score at 0.25 and leaderboard at 0.55)
+  // Form positioned at 0.35 on mobile (between score at 0.25 and leaderboard at 0.65)
   
   // Leaderboard positioned much lower to avoid overlap
   if (leaderboardData && leaderboardData.length > 0) {
     fill(255, 215, 0);
     textSize(isMobile ? boxWidth * 0.06 : boxWidth * 0.035);
-    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.55 : 0.62)); // Positioned after form
+    text("Highest Scores", width/2, boxY + boxHeight * (isMobile ? 0.65 : 0.62)); // Much lower to avoid Save button overlap
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      let yPos = boxY + boxHeight * (isMobile ? 0.60 : 0.67) + (i * boxHeight * 0.03);
+      let yPos = boxY + boxHeight * (isMobile ? 0.70 : 0.67) + (i * boxHeight * 0.03);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
@@ -5084,7 +5087,7 @@ function drawGameOverOverlay() {
   fill(255, 165, 0);
   let baseBtnWidth = isMobile ? boxWidth * 0.25 : boxWidth * 0.15; // Wider buttons on mobile
   let baseBtnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08; // Slightly shorter on mobile to fit
-  let btnY = boxY + boxHeight * (isMobile ? 0.80 : 0.88); // Below leaderboard on mobile
+  let btnY = boxY + boxHeight * (isMobile ? 0.85 : 0.88); // Below leaderboard on mobile
   
   // Play Again button with pulsing animation
   let pulseScale = 1 + sin(frameCount * 0.1) * 0.05; // Same pulse as Start Game button
