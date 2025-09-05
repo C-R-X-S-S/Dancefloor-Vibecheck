@@ -2820,14 +2820,14 @@ function mouseMoved() {
     // If we get here, no clickable elements are hovered
     cursor('default'); // Default arrow cursor
   } else if (!isMobile && gameState === 'gameOver') {
-    // Calculate Game Over button positions (same logic as in drawGameOverOverlay)
-    let boxWidth = width * 0.6;
-    let boxHeight = height * 0.7;
+    // Use GLOBAL POSITIONS for hover detection  
+    let pos = GLOBAL_POSITIONS || calculateRealPositions();
+    let boxWidth = isMobile ? width * 0.9 : width * 0.6;
+    let boxHeight = isMobile ? height * 0.95 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
-    let boxY = (height - boxHeight) / 2;
-    let baseBtnWidth = boxWidth * 0.15;
-    let baseBtnHeight = boxHeight * 0.08;
-    let btnY = boxY + boxHeight * 0.88;
+    let baseBtnWidth = isMobile ? boxWidth * 0.25 : boxWidth * 0.15;
+    let baseBtnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08;
+    let btnY = pos.buttons; // USE SAME POSITION AS DRAWING
     
     // Check if mouse is over Play Again button (account for pulsing)
     let pulseScale = 1 + sin(frameCount * 0.1) * 0.05;
@@ -3049,14 +3049,14 @@ function handleInput(inputX, inputY) {
   } else if (gameState === 'gameOver') {
     console.log("🎮 Game Over state - checking button clicks");
     
-    // Use the same button positioning logic as drawGameOverOverlay
-    let boxWidth = width * 0.6;
-    let boxHeight = height * 0.7;
+    // Use GLOBAL POSITIONS for button detection
+    let pos = GLOBAL_POSITIONS || calculateRealPositions();
+    let boxWidth = isMobile ? width * 0.9 : width * 0.6;
+    let boxHeight = isMobile ? height * 0.95 : height * 0.7;
     let boxX = (width - boxWidth) / 2;
-    let boxY = (height - boxHeight) / 2;
-    let btnWidth = boxWidth * 0.15;
-    let btnHeight = boxHeight * 0.08;
-    let btnY = boxY + boxHeight * 0.85;
+    let btnWidth = isMobile ? boxWidth * 0.25 : boxWidth * 0.15;
+    let btnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08;
+    let btnY = pos.buttons; // USE SAME POSITION AS DRAWING
     
     console.log("Game Over button bounds:", {
       playAgainLeft: boxX + boxWidth * 0.3 - btnWidth/2,
@@ -5181,15 +5181,35 @@ function drawGameOverOverlay() {
   // Main Menu button (no pulsing)
   rect(boxX + boxWidth * 0.7 - baseBtnWidth/2, btnY, baseBtnWidth, baseBtnHeight, 10);
   
-  fill(255);
   textAlign(CENTER, CENTER);
   
-  // Play Again text with pulsing size
-  textSize((isMobile ? boxWidth * 0.04 : boxWidth * 0.025) * pulseScale);
+  // Play Again text with black outline and pulsing size
+  let playAgainSize = (isMobile ? boxWidth * 0.04 : boxWidth * 0.025) * pulseScale;
+  textSize(playAgainSize);
+  
+  // Black outline for Play Again
+  stroke(0);
+  strokeWeight(3);
+  fill(0);
   text("Play Again", boxX + boxWidth * 0.3, btnY + baseBtnHeight/2);
   
-  // Main Menu text (normal size)
+  // White text on top for Play Again
+  noStroke();
+  fill(255);
+  text("Play Again", boxX + boxWidth * 0.3, btnY + baseBtnHeight/2);
+  
+  // Main Menu text with black outline (normal size)
   textSize(isMobile ? boxWidth * 0.04 : boxWidth * 0.025);
+  
+  // Black outline for Main Menu
+  stroke(0);
+  strokeWeight(3);
+  fill(0);
+  text("Main Menu", boxX + boxWidth * 0.7, btnY + baseBtnHeight/2);
+  
+  // White text on top for Main Menu
+  noStroke();
+  fill(255);
   text("Main Menu", boxX + boxWidth * 0.7, btnY + baseBtnHeight/2);
 }
 
@@ -5289,3 +5309,4 @@ function keyPressed() {
     console.log(`🕐 Timer Status - Current: ${trackSwitchTimer}, Target: ${trackSwitchInterval}, Track: ${currentTrackIndex + 1}, GameState: ${gameState}, Autopilot: ${autopilotMode}`);
   }
 }
+
