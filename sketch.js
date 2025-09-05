@@ -1097,6 +1097,16 @@ function drawGameplay() {
       if (!soundEffectsMuted) heySomebodyDroppedSound.play();
       mmmGettingDownPlayed = true; // Mark that the sound has been played
     }
+  }
+  
+  // Check for disco ball video at score 15
+  if (score >= 15 && !waitingForScore15Video) {
+    console.log('🎥 Score 15 reached - triggering disco ball video!');
+    console.log('🎥 Video object exists:', !!partyStartedVideo);
+    console.log('🎥 Current score:', score);
+    console.log('🎥 waitingForScore15Video was:', waitingForScore15Video);
+    waitingForScore15Video = true;
+    playPartyStartedVideo();
     
     // Find a female dancer to give white aura and position her at bottom right of dancefloor
     let femaleDancers = dancers.filter(d => d.gender === 'female' && d.state === 'dancing');
@@ -3058,21 +3068,36 @@ function handleInput(inputX, inputY) {
     let btnHeight = isMobile ? boxHeight * 0.06 : boxHeight * 0.08;
     let btnY = pos.buttons; // USE SAME POSITION AS DRAWING
     
-    console.log("Game Over button bounds:", {
-      playAgainLeft: boxX + boxWidth * 0.3 - btnWidth/2,
-      playAgainRight: boxX + boxWidth * 0.3 + btnWidth/2,
-      leaderboardLeft: boxX + boxWidth * 0.5 - btnWidth/2,
-      leaderboardRight: boxX + boxWidth * 0.5 + btnWidth/2,
+    // Calculate pulsing for debug
+    let debugPulseScale = 1 + sin(frameCount * 0.1) * 0.05;
+    let debugPlayAgainWidth = btnWidth * debugPulseScale;
+    let debugPlayAgainHeight = btnHeight * debugPulseScale;
+    let debugPlayAgainTop = btnY + (btnHeight - debugPlayAgainHeight)/2;
+    
+    console.log("🖱️ Desktop button debug:", {
+      isMobile: isMobile,
+      posButtons: pos.buttons,
+      btnY: btnY,
+      pulseScale: debugPulseScale,
+      playAgainLeft: boxX + boxWidth * 0.3 - debugPlayAgainWidth/2,
+      playAgainRight: boxX + boxWidth * 0.3 + debugPlayAgainWidth/2,
+      playAgainTop: debugPlayAgainTop,
+      playAgainBottom: debugPlayAgainTop + debugPlayAgainHeight,
       mainMenuLeft: boxX + boxWidth * 0.7 - btnWidth/2,
       mainMenuRight: boxX + boxWidth * 0.7 + btnWidth/2,
-      buttonTop: btnY,
-      buttonBottom: btnY + btnHeight,
+      mainMenuTop: btnY,
+      mainMenuBottom: btnY + btnHeight,
       click: {x: inputX, y: inputY}
     });
     
-    // Play Again button
-    if (inputX > boxX + boxWidth * 0.3 - btnWidth/2 && inputX < boxX + boxWidth * 0.3 + btnWidth/2 &&
-        inputY > btnY && inputY < btnY + btnHeight) {
+    // Play Again button - account for pulsing animation
+    let pulseScale = 1 + sin(frameCount * 0.1) * 0.05;
+    let playAgainWidth = btnWidth * pulseScale;
+    let playAgainHeight = btnHeight * pulseScale;
+    let playAgainTop = btnY + (btnHeight - playAgainHeight)/2;
+    
+    if (inputX > boxX + boxWidth * 0.3 - playAgainWidth/2 && inputX < boxX + boxWidth * 0.3 + playAgainWidth/2 &&
+        inputY > playAgainTop && inputY < playAgainTop + playAgainHeight) {
       console.log("🔄 Play Again button clicked!");
       
       // Track play again button click
@@ -4999,10 +5024,19 @@ function drawMainMenu() {
   fill(buttonColor[0], buttonColor[1], buttonColor[2]);
   rect(width/2 - buttonWidth/2, buttonY, buttonWidth, buttonHeight, 15);
   
-  fill(255);
   textAlign(CENTER, CENTER); // Ensure text alignment is set
   let textScale = waitingForStartSound ? 1 : (1 + sin(frameCount * 0.1) * 0.05); // Pulse text only when not waiting
   textSize(min(boxWidth * 0.03, boxHeight * 0.04) * textScale);
+  
+  // Black outline for Start Game button text
+  stroke(0);
+  strokeWeight(3);
+  fill(0);
+  text(buttonText, width/2, buttonY + buttonHeight/2);
+  
+  // White text on top for Start Game button
+  noStroke();
+  fill(255);
   text(buttonText, width/2, buttonY + buttonHeight/2);
   
   // Credit images below start button - centered with Start Game button
@@ -5038,6 +5072,7 @@ function calculateRealPositions() {
       score: height * 0.4,
       formStart: height * 0.45,
       leaderboardTitle: height * 0.65,
+      leaderboardEntries: height * 0.70, // Added missing leaderboard entries position
       buttons: height * 0.8
     };
   }
@@ -5137,14 +5172,23 @@ function drawGameOverOverlay() {
     // USE GLOBAL POSITIONS - NO SAFETY CHECKS NEEDED
     let leaderboardY = pos.leaderboardTitle;
     
+    // DEBUG: Log leaderboard info
+    console.log('📊 Drawing leaderboard:', {
+      isMobile: isMobile,
+      dataLength: leaderboardData.length,
+      titleY: leaderboardY,
+      entriesY: pos.leaderboardEntries
+    });
+    
     text("Highest Scores", width/2, leaderboardY);
     
     // Show top 3 scores to save space
     let displayCount = min(3, leaderboardData.length);
     for (let i = 0; i < displayCount; i++) {
       let entry = leaderboardData[i];
-      // USE GLOBAL POSITIONS - NO CALCULATIONS NEEDED
-      let yPos = pos.leaderboardEntries + (i * boxHeight * 0.03);
+      // USE GLOBAL POSITIONS with consistent spacing
+      let entrySpacing = isMobile ? boxHeight * 0.03 : height * 0.04; // Larger spacing for desktop
+      let yPos = pos.leaderboardEntries + (i * entrySpacing);
       
       fill(255, 255, 255);
       textSize(isMobile ? boxWidth * 0.05 : boxWidth * 0.025);
@@ -5309,4 +5353,3 @@ function keyPressed() {
     console.log(`🕐 Timer Status - Current: ${trackSwitchTimer}, Target: ${trackSwitchInterval}, Track: ${currentTrackIndex + 1}, GameState: ${gameState}, Autopilot: ${autopilotMode}`);
   }
 }
-
